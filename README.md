@@ -9,9 +9,10 @@ A proof of concept self-hosted micro architecture heavily inspired by [AWS Lambd
 
 ## TODO
 - generator
-    - complete Spring Boot jar
+    - complete Jersey/Spring Boot jar
     - Docker image
     - HTTP client
+- console with persistence to map functions to endpoints    
 - metrics
 - scheduler
 
