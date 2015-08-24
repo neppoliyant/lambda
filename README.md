@@ -9,9 +9,10 @@
 
 ***REMOVED***
 ***REMOVED***
-    - complete Spring Boot jar
+    - complete Jersey/Spring Boot jar
     - Docker image
 ***REMOVED***
+- console with persistence to map functions to endpoints    
 ***REMOVED***
 ***REMOVED***
 

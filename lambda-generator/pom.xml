@@ -12,11 +12,23 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.digitalsanctum.lambda</groupId>
+            <artifactId>lambda-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jersey</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.squareup</groupId>
             <artifactId>javapoet</artifactId>
             <version>1.2.0</version>
         </dependency>
     </dependencies>
-
 
 </project>
