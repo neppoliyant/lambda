@@ -1,21 +1,24 @@
 
 # lambda
 
-A proof of concept self-hosted micro architecture heavily inspired by AWS Lambda.
+A proof of concept self-hosted micro architecture heavily inspired by [AWS Lambda](https://aws.amazon.com/lambda/).
 
 ## Features
 - Compatible with AWS Lambda - the same artifacts will work
 - Meant to be self-hosted
 
 ## TODO
-- lambda-generator - generate a complete tar.gz or Docker container which includes an API gateway
-- lambda-metrics
-- lambda-scheduler
+- generator
+    - complete Spring Boot jar
+    - Docker image
+    - HTTP client
+- metrics
+- scheduler
 
 ## Half-baked ideas
 - Use lambdas to generate other lambdas
-- lambda chaining and/or side car lambdas
-- lambda marketplace
+- chaining and/or side car lambdas
+- marketplace
 
   
   
