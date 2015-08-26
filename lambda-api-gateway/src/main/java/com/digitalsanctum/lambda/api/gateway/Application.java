@@ -1,4 +1,4 @@
-package com.digitalsanctum.lambda.ws;
+package com.digitalsanctum.lambda.api.gateway;
 
 import com.digitalsanctum.lambda.Definition;
 import com.digitalsanctum.lambda.Executor;

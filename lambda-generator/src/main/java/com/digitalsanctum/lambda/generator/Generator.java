@@ -7,6 +7,12 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeSpec;
+import org.apache.maven.shared.invoker.DefaultInvocationRequest;
+import org.apache.maven.shared.invoker.DefaultInvoker;
+import org.apache.maven.shared.invoker.InvocationRequest;
+import org.apache.maven.shared.invoker.InvocationResult;
+import org.apache.maven.shared.invoker.Invoker;
+import org.apache.maven.shared.invoker.MavenInvocationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Properties;
 import javax.lang.model.element.Modifier;
 import javax.ws.rs.GET;
@@ -25,21 +32,54 @@ public class Generator {
 
     public static void main(String[] args) throws IOException {
 
-        Path propsPath = Paths.get("/Users/shane.witbeck/projects/lambda/lambda-ws/src/main/resources/application.properties");
-        Path endpointSrcPath = Paths.get("/Users/shane.witbeck/projects/lambda/lambda-ws/src/main/java");
+        String baseDir = "/Users/shane.witbeck/projects/lambda";
+
+        Path propsPath = Paths.get(baseDir, "/lambda-api-gateway/src/main/resources/application.properties");
+        Path endpointSrcPath = Paths.get(baseDir, "/lambda-api-gateway/src/main/java");
+        Path pomFilePath = Paths.get(baseDir, "/lambda-api-gateway/pom.xml");
+        Path lambdaJarPath = Paths.get(baseDir, "/lambda-samples/target/lambda-samples-1.0-SNAPSHOT.jar");
 
         new Generator()
                 .generateProperties(propsPath, "Hello", "com.digitalsanctum.lambda.samples.HelloWorld::hello", 3)
-                .generateEndpointClass(endpointSrcPath, POST.class, "/hello", String.class, String.class);
+                .generateEndpointClass(endpointSrcPath, POST.class, "/hello", String.class, String.class)
+                .installLambdaJar(pomFilePath, lambdaJarPath)
+                .compileAndPackage(pomFilePath);
+    }
 
-        // todo assemble gateway app using lambda-ws as template
-        // todo compile and package
-        // todo create Docker image
+    private Generator invokeMaven(Path pomFile, String... goals) {
+        if (pomFile == null) {
+            throw new IllegalArgumentException("No path specified for pom.xml");
+        }
+
+        InvocationRequest invocationRequest = new DefaultInvocationRequest()
+                .setPomFile(pomFile.toFile())
+                .setGoals(Arrays.asList(goals));
+
+        Invoker invoker = new DefaultInvoker();
+        InvocationResult result = null;
+        try {
+            result = invoker.execute(invocationRequest);
+        } catch (MavenInvocationException e) {
+            System.err.println("Error executing Maven goals. " + e.getMessage());
+            System.exit(1);
+        }
+        if (result != null && result.getExitCode() != 0) {
+            System.err.println("Maven goal failed with non-zero exit code; pom: "
+                    + pomFile.toString() + ", goals: " + Arrays.asList(goals));
+            System.exit(1);
+        }
+        return this;
+    }
+
+    private Generator installLambdaJar(Path pomFile, Path lambdaJar) {
+        return invokeMaven(pomFile, "install:install-file -Dfile=" + lambdaJar.toString() + " -DgroupId=com.foo -DartifactId=lambda -Dversion=1.0 -Dpackaging=jar");
+    }
+
+    private Generator compileAndPackage(Path pomFile) {
+        return invokeMaven(pomFile, "clean", "package");
     }
 
     private Generator generateProperties(Path propsFilePath, String name, String handler, int timeout) throws IOException {
-
-        // todo generate properties file
 
         Properties props = new Properties();
         props.setProperty("lambda.name", name);

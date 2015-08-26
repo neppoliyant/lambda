@@ -1,4 +1,4 @@
-package com.digitalsanctum.lambda.ws;
+package com.digitalsanctum.lambda.api.gateway;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.stereotype.Component;
