@@ -12,9 +12,15 @@
 
     <properties>
         <javapoet.version>1.2.0</javapoet.version>
+        <maven-invoker.version>2.2</maven-invoker.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-invoker</artifactId>
+            <version>${maven-invoker.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.digitalsanctum.lambda</groupId>
             <artifactId>lambda-core</artifactId>
