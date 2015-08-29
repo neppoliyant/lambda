@@ -24,4 +24,8 @@ ENV PATH $M2_HOME/bin:$PATH
 ADD . /data/
 WORKDIR /data
 
+# lambda defaults
+ENV LAMBDA_HTTP_METHOD POST
+ENV LAMBDA_TIMEOUT 5
+
 CMD ["/data/build.sh"]
