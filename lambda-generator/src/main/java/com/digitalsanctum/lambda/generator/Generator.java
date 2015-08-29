@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Properties;
 import javax.lang.model.element.Modifier;
 import javax.ws.rs.GET;
@@ -30,18 +31,35 @@ import javax.ws.rs.QueryParam;
 
 public class Generator {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
-        String baseDir = "/Users/shane.witbeck/projects/lambda";
+        if (args == null || args.length < 3) {
+            System.err.println("Usage: java -jar lambda-generator-1.0-SNAPSHOT.jar <lambda_jar_path> <handler> <resource_path> [timeout]");
+            return;
+        }
 
+        Path lambdaJarPath = Paths.get(args[0]);
+        String handler = args[1];
+        String resourcePath = args[2];
+        int timeout = 3; // default
+        if (args.length == 4) {
+            timeout = Integer.parseInt(args[3]);
+        }
+
+        String name = handler + System.currentTimeMillis();
+
+        Map<String, Class> types = Executor.getRequestHandlerTypes(handler);
+        Class requestType = types.get("request");
+        Class responseType = types.get("response");
+
+        String baseDir = "/data";
         Path propsPath = Paths.get(baseDir, "/lambda-api-gateway/src/main/resources/application.properties");
         Path endpointSrcPath = Paths.get(baseDir, "/lambda-api-gateway/src/main/java");
         Path pomFilePath = Paths.get(baseDir, "/lambda-api-gateway/pom.xml");
-        Path lambdaJarPath = Paths.get(baseDir, "/lambda-samples/target/lambda-samples-1.0-SNAPSHOT.jar");
 
         new Generator()
-                .generateProperties(propsPath, "Hello", "com.digitalsanctum.lambda.samples.HelloWorld::hello", 3)
-                .generateEndpointClass(endpointSrcPath, POST.class, "/hello", String.class, String.class)
+                .generateProperties(propsPath, name, handler, timeout)
+                .generateEndpointClass(endpointSrcPath, POST.class, resourcePath, requestType, responseType)
                 .installLambdaJar(pomFilePath, lambdaJarPath)
                 .compileAndPackage(pomFilePath);
     }
@@ -72,7 +90,8 @@ public class Generator {
     }
 
     private Generator installLambdaJar(Path pomFile, Path lambdaJar) {
-        return invokeMaven(pomFile, "install:install-file -Dfile=" + lambdaJar.toString() + " -DgroupId=com.foo -DartifactId=lambda -Dversion=1.0 -Dpackaging=jar");
+        return invokeMaven(pomFile, "install:install-file -Dfile=" + lambdaJar.toString() +
+                " -DgroupId=com.foo -DartifactId=lambda -Dversion=1.0 -Dpackaging=jar");
     }
 
     private Generator compileAndPackage(Path pomFile) {
@@ -82,7 +101,6 @@ public class Generator {
     private Generator generateProperties(Path propsFilePath, String name, String handler, int timeout) throws IOException {
 
         Properties props = new Properties();
-        props.setProperty("lambda.name", name);
         props.setProperty("lambda.handler", handler);
         props.setProperty("lambda.timeout", Integer.toString(timeout));
 
@@ -100,8 +118,8 @@ public class Generator {
     private Generator generateEndpointClass(Path endpointSrcPath,
                                             Class httpMethod,
                                             String resourcePath,
-                                            Class inputType,
-                                            Class returnType) throws IOException {
+                                            Class requestType,
+                                            Class responseType) throws IOException {
         FieldSpec executorField = FieldSpec.builder(Executor.class, "executor")
                 .addModifiers(Modifier.PRIVATE)
                 .addAnnotation(Autowired.class)
@@ -109,10 +127,10 @@ public class Generator {
 
         ParameterSpec paramSpec;
         if (httpMethod.equals(POST.class)) {
-            paramSpec = ParameterSpec.builder(inputType, "input").build();
+            paramSpec = ParameterSpec.builder(requestType, "input").build();
 
         } else if (httpMethod.equals(GET.class)) {
-            paramSpec = ParameterSpec.builder(inputType, "input")
+            paramSpec = ParameterSpec.builder(requestType, "input")
                     .addAnnotation(AnnotationSpec.builder(QueryParam.class)
                             .addMember("value", "$S", "input")
                             .build())
@@ -126,8 +144,8 @@ public class Generator {
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(paramSpec)
                 .addException(Exception.class)
-                .returns(returnType)
-                .addStatement("return ($T) executor.execute(input).getResult()", returnType)
+                .returns(responseType)
+                .addStatement("return ($T) executor.execute(input).getResult()", responseType)
                 .build();
 
         TypeSpec endpoint = TypeSpec.classBuilder("Endpoint")
@@ -140,7 +158,7 @@ public class Generator {
                 .addMethod(messageMethod)
                 .build();
 
-        JavaFile javaFile = JavaFile.builder("com.digitalsanctum.lambda.ws", endpoint)
+        JavaFile javaFile = JavaFile.builder("com.digitalsanctum.lambda.api.gateway", endpoint)
                 .build();
 
         javaFile.writeTo(System.out);
