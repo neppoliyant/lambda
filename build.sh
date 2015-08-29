@@ -11,7 +11,7 @@ gen() {
 
     echo "calling generator..."
     cd ..
-    java -cp ${LAMBDA_JAR}:lambda-generator/target/lambda-generator-1.0-SNAPSHOT.jar com.digitalsanctum.lambda.generator.Generator ${LAMBDA_JAR} ${LAMBDA_HANDLER} ${LAMBDA_RESOURCE_PATH} ${LAMBDA_TIMEOUT}
+    java -cp ${LAMBDA_JAR}:lambda-generator/target/lambda-generator-1.0-SNAPSHOT.jar com.digitalsanctum.lambda.generator.Generator ${LAMBDA_JAR} ${LAMBDA_HANDLER} ${LAMBDA_RESOURCE_PATH} ${LAMBDA_HTTP_METHOD} ${LAMBDA_TIMEOUT}
 
     echo "generation complete!"
 }
@@ -23,7 +23,4 @@ exportApi() {
 
 gen;
 exportApi;
-
-
-
 

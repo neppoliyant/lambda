@@ -34,17 +34,15 @@ public class Generator {
     public static void main(String[] args) throws Exception {
 
         if (args == null || args.length < 3) {
-            System.err.println("Usage: java -jar lambda-generator-1.0-SNAPSHOT.jar <lambda_jar_path> <handler> <resource_path> [timeout]");
+            System.err.println("Usage: java -jar lambda-generator-1.0-SNAPSHOT.jar <lambda_jar_path> <handler> <resource_path> <resource_http_method:POST> <timeout:5>");
             return;
         }
 
         Path lambdaJarPath = Paths.get(args[0]);
         String handler = args[1];
         String resourcePath = args[2];
-        int timeout = 3; // default
-        if (args.length == 4) {
-            timeout = Integer.parseInt(args[3]);
-        }
+        Class httpMethod = getHttpMethodFromString(args[3]);
+        int timeout = Integer.parseInt(args[4]);
 
         String name = handler + System.currentTimeMillis();
 
@@ -59,9 +57,19 @@ public class Generator {
 
         new Generator()
                 .generateProperties(propsPath, name, handler, timeout)
-                .generateEndpointClass(endpointSrcPath, POST.class, resourcePath, requestType, responseType)
+                .generateEndpointClass(endpointSrcPath, httpMethod, resourcePath, requestType, responseType)
                 .installLambdaJar(pomFilePath, lambdaJarPath)
                 .compileAndPackage(pomFilePath);
+    }
+
+    private static Class getHttpMethodFromString(String in) {
+        if ("POST".equalsIgnoreCase(in)) {
+            return POST.class;
+        } else if ("GET".equalsIgnoreCase(in)) {
+            return GET.class;
+        } else {
+            throw new IllegalArgumentException("Unsupported HTTP method: " + in);
+        }
     }
 
     private Generator invokeMaven(Path pomFile, String... goals) {

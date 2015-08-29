@@ -7,6 +7,15 @@
 ***REMOVED***
 ***REMOVED***
 
+***REMOVED***
+
+LAMBDA_JAR - path to the lambda jar.
+LAMBDA_HANDLER - the lambda class which implements RequestHandler<I,O>
+LAMBDA_HTTP_METHOD - only GET or POST is currently supported. default is POST
+LAMBDA_RESOURCE - the http path to map to the handler (for example "/hello")
+LAMBDA_TIMEOUT - the maximum amount of time to wait for a call to finish
+
+
 ## Usage
 
 Build the container that will be responsible for composing and building the api gateway jar (a Spring Boot application)
@@ -21,7 +30,6 @@ Using a fresh builder image (no maven dependencies downloaded)
         -e "LAMBDA_JAR=/data/import/lambda.jar" \
         -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloWorld" \
         -e "LAMBDA_RESOURCE_PATH=/hello" \
-        -e "LAMBDA_TIMEOUT=5" \
         -v ~/projects/lambda/import:/data/import \
         -v ~/projects/lambda/export:/data/export \
         --name builder lambda/builder:primed /data/build.sh
@@ -32,7 +40,6 @@ Or, use the primed image (most maven dependencies already downloaded)
     -e "LAMBDA_JAR=/data/import/lambda.jar" \
     -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloWorld" \
     -e "LAMBDA_RESOURCE_PATH=/hello" \
-    -e "LAMBDA_TIMEOUT=5" \
     -v ~/projects/lambda/import:/data/import \
     -v ~/projects/lambda/export:/data/export \
     --name builder lambda/builder
@@ -53,7 +60,6 @@ First, run interactively:
         -e "LAMBDA_JAR=/data/import/lambda.jar" \
         -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloWorld" \
         -e "LAMBDA_RESOURCE_PATH=/hello" \
-        -e "LAMBDA_TIMEOUT=5" \
         -v ~/projects/lambda/import:/data/import \
         -v ~/projects/lambda/export:/data/export \
         --name builder lambda/builder /bin/bash
@@ -68,8 +74,7 @@ Last, from the Docker host commit the container.
 
 ***REMOVED***
 ***REMOVED***
-    - complete Jersey/Spring Boot jar
-    - Docker image
+***REMOVED***
 ***REMOVED***
 ***REMOVED*** with persistence to map functions to endpoints    
 ***REMOVED***
@@ -79,4 +84,14 @@ Last, from the Docker host commit the container.
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
+
+
+docker run -d \
+        -e "LAMBDA_JAR=/data/import/lambda.jar" \
+        -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.Time" \
+        -e "LAMBDA_HTTP_METHOD=GET" \
+        -e "LAMBDA_RESOURCE_PATH=/hello" \
+        -v ~/projects/lambda/import:/data/import \
+        -v ~/projects/lambda/export:/data/export \
+        --name builder lambda/builder:primed /data/build.sh
 
