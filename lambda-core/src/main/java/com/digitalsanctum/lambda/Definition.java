@@ -6,13 +6,17 @@ import com.digitalsanctum.lambda.context.SimpleContext;
 import java.util.UUID;
 
 public class Definition {
-    private final String name;
     private final String handler;
+    private String name;
     private int timeout = 60;
 
-    public Definition(String handler, String name) {
+    public Definition(String handler) {
         this.handler = handler;
-        this.name = name;
+    }
+
+    public Definition(String handler, int timeout) {
+        this.handler = handler;
+        this.timeout = timeout;
     }
 
     public String getHandler() {
@@ -21,6 +25,10 @@ public class Definition {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getRuntime() {

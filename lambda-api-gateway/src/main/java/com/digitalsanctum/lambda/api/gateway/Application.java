@@ -11,9 +11,6 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class Application extends SpringBootServletInitializer {
 
-    @Value("${lambda.name}")
-    private String name;
-
     @Value("${lambda.handler}")
     private String handler;
 
@@ -25,14 +22,7 @@ public class Application extends SpringBootServletInitializer {
     }
 
     @Bean
-    public Definition definition() {
-        Definition def = new Definition(handler, name);
-        def.setTimeout(timeout);
-        return def;
-    }
-
-    @Bean
     public Executor executor() {
-        return new Executor(definition());
+        return new Executor(new Definition(handler, timeout));
     }
 }

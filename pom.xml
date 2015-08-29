@@ -12,7 +12,6 @@
         <module>lambda-core</module>
         <module>lambda-generator</module>
         <module>lambda-samples</module>
-        <module>lambda-ws</module>
     </modules>
 
     <properties>

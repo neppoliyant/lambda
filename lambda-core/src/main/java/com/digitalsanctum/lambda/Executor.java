@@ -9,6 +9,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -24,17 +26,13 @@ public class Executor implements ResultProvider {
         this.definition = definition;
     }
 
-    public Definition getDefinition() {
-        return definition;
-    }
-
     @SuppressWarnings("unchecked")
     public ResultProvider execute(final Object input) throws Exception {
 
-        // todo better algorithm around method selection
-
-
         if (this.definition.getHandler().contains("::")) {
+
+            // TODO better algorithm around method selection
+
             Class cls = Class.forName(this.definition.getHandlerClass());
             Method[] declaredMethods = cls.getDeclaredMethods();
             Method selectedMethod = null;
@@ -57,30 +55,46 @@ public class Executor implements ResultProvider {
         } else {
             Class cls = Class.forName(this.definition.getHandler());
             final Object obj = cls.newInstance();
-            if (obj instanceof RequestHandler) {
-                Type[] interfaces = cls.getGenericInterfaces();
-                ParameterizedType firstInterface = (ParameterizedType) interfaces[0];
-                if (firstInterface.getActualTypeArguments().length == 2) {
-                    Class requestClass = (Class) firstInterface.getActualTypeArguments()[0];
-                    Class responseClass = (Class) firstInterface.getActualTypeArguments()[1];
 
-                    Object requestObj = input;
-                    if (input instanceof String && ((String) input).startsWith("{")) {
-                        ObjectMapper mapper = new ObjectMapper();
-                        requestObj = mapper.readValue(((String) input).getBytes(), requestClass);
-                    }
+            Map<String, Class> handlerTypes = getRequestHandlerTypes(this.definition.getHandler());
 
-                    invoke(requestObj, obj, cls.getDeclaredMethod("handleRequest", requestClass, Context.class));
-
-                } else {
-                    throw new RuntimeException("unexpected number of type args " + firstInterface.getActualTypeArguments().length);
-                }
-            } else {
-                throw new RuntimeException(obj.getClass() + " does not implement RequestHandler");
+            Class requestClass = handlerTypes.get("request");
+            Object requestObj = input;
+            if (input instanceof String && ((String) input).startsWith("{")) {
+                ObjectMapper mapper = new ObjectMapper();
+                requestObj = mapper.readValue(((String) input).getBytes(), requestClass);
             }
+
+            invoke(requestObj, obj, cls.getDeclaredMethod("handleRequest", requestClass, Context.class));
         }
 
         return this;
+    }
+
+    public static Map<String, Class> getRequestHandlerTypes(String handler)
+            throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+
+        Map<String, Class> types = new HashMap<>();
+        Class cls = Class.forName(handler);
+        final Object obj = cls.newInstance();
+        if (obj instanceof RequestHandler) {
+            Type[] interfaces = cls.getGenericInterfaces();
+            // TODO don't assume RequestHandler is the first/only interface
+            ParameterizedType firstInterface = (ParameterizedType) interfaces[0];
+            if (firstInterface.getActualTypeArguments().length == 2) {
+                Class requestClass = (Class) firstInterface.getActualTypeArguments()[0];
+                types.put("request", requestClass);
+
+                Class responseClass = (Class) firstInterface.getActualTypeArguments()[1];
+                types.put("response", responseClass);
+            } else {
+                throw new RuntimeException("unexpected number of type args " + firstInterface.getActualTypeArguments().length);
+            }
+        } else {
+            throw new RuntimeException(obj.getClass() + " does not implement RequestHandler");
+        }
+
+        return types;
     }
 
     public Object getResult() {
