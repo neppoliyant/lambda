@@ -73,12 +73,21 @@ Last, from the Docker host commit the container.
 
 
 ## TODO
+- easy deploy to public clouds (Terraform?)
+    - start with AWS EC2 and Digital Ocean
 - generator
     - lambda documentation?
     - HTTP client
-- console/meta with persistence to map functions to endpoints    
+- console/meta
+    - with persistence to map functions to endpoints
+    - manage lifecycle of lambdas
+    - deploy to public clouds (parameterize Terraform?)
+    - Angular? Spring Boot/Jersey or Dropwizard?
 - metrics
 - scheduler
+- events
+    - S3
+    - Github webhook
 
 ## Half-baked ideas
 - Use lambdas to generate other lambdas
