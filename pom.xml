@@ -12,6 +12,7 @@
         <module>lambda-core</module>
         <module>lambda-generator</module>
         <module>lambda-samples</module>
+        <module>lambda-console</module>
     </modules>
 
     <properties>

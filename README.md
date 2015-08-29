@@ -73,10 +73,19 @@ Last, from the Docker host commit the container.
 
 
 ***REMOVED***
+***REMOVED*** (Terraform?)
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
-***REMOVED*** with persistence to map functions to endpoints    
+***REMOVED***
+***REMOVED***
+***REMOVED***
+***REMOVED***
+***REMOVED***
+    - Angular? Spring Boot/Jersey or Dropwizard?
+***REMOVED***
+***REMOVED***
+***REMOVED***
 ***REMOVED***
 ***REMOVED***
 
