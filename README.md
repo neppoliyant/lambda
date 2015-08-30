@@ -20,7 +20,7 @@ LAMBDA_TIMEOUT - the maximum amount of time to wait for a call to finish
 
 Build the container that will be responsible for composing and building the api gateway jar (a Spring Boot application)
 
-    docker build -t lambda/builder .
+    docker build -t digitalsanctum/lambda-builder .
 
 Run the lambda/builder container and pass the required environment variables:
 
@@ -32,7 +32,7 @@ Using a fresh builder image (no maven dependencies downloaded)
         -e "LAMBDA_RESOURCE_PATH=/hello" \
         -v ~/projects/lambda/import:/data/import \
         -v ~/projects/lambda/export:/data/export \
-        --name builder lambda/builder:primed /data/build.sh
+        --name builder digitalsanctum/lambda-builder:primed /data/build.sh
 
 Or, use the primed image (most maven dependencies already downloaded)
 
@@ -42,14 +42,14 @@ Or, use the primed image (most maven dependencies already downloaded)
     -e "LAMBDA_RESOURCE_PATH=/hello" \
     -v ~/projects/lambda/import:/data/import \
     -v ~/projects/lambda/export:/data/export \
-    --name builder lambda/builder
+    --name builder digitalsanctum/lambda-builder
 
 
 Optionally, build and run a container to run the exported api.jar:
 
     cd export
-    docker build -t lambda/api .
-    docker run -d -p 8080:8080 --name api lambda/api
+    docker build -t digitalsanctum/lambda-api .
+    docker run -d -p 8080:8080 --name api digitalsanctum/lambda-api
 
 
 ## Priming the Builder Container
@@ -62,13 +62,13 @@ First, run interactively:
         -e "LAMBDA_RESOURCE_PATH=/hello" \
         -v ~/projects/lambda/import:/data/import \
         -v ~/projects/lambda/export:/data/export \
-        --name builder lambda/builder /bin/bash
+        --name builder digitalsanctum/lambda-builder /bin/bash
 
 Second, from inside the builder container run /data/build.sh
 
 Last, from the Docker host commit the container.
 
-    docker commit builder lambda/builder:primed
+    docker commit builder digitalsanctum/lambda-builder:primed
 
 
 
@@ -95,12 +95,5 @@ Last, from the Docker host commit the container.
 - marketplace
 
 
-docker run -d \
-        -e "LAMBDA_JAR=/data/import/lambda.jar" \
-        -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.Time" \
-        -e "LAMBDA_HTTP_METHOD=GET" \
-        -e "LAMBDA_RESOURCE_PATH=/hello" \
-        -v ~/projects/lambda/import:/data/import \
-        -v ~/projects/lambda/export:/data/export \
-        --name builder lambda/builder:primed /data/build.sh
+curl -X POST -d 'shane' 'http://localhost:8080/hello'
 
