@@ -16,6 +16,6 @@ resource "digitalocean_droplet" "lambda-1" {
   }
 }
 
-//output "address_lambda-1" {
-//  value = "${digitalocean_droplet.labmda-1.ipv4_address}"
-//}
+output "address_lambda-1" {
+  value = "${digitalocean_droplet.lambda-1.ipv4_address}"
+}
