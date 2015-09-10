@@ -9,4 +9,4 @@ WORKDIR /data
 # lambda defaults
 ENV LAMBDA_HTTP_METHOD=POST LAMBDA_TIMEOUT=5
 
-CMD ["/data/build.sh"]
+RUN chmod a+x generate.sh prime.sh

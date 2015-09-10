@@ -32,17 +32,17 @@ Using a fresh builder image (no maven dependencies downloaded)
         -e "LAMBDA_RESOURCE_PATH=/hello" \
         -v ~/projects/lambda/import:/data/import \
         -v ~/projects/lambda/export:/data/export \
-        --name builder digitalsanctum/lambda-builder:primed /data/build.sh
+        --name builder digitalsanctum/lambda-builder
 
 Or, use the primed image (most maven dependencies already downloaded)
 
     docker run -d \
-    -e "LAMBDA_JAR=/data/import/lambda.jar" \
-    -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloWorld" \
-    -e "LAMBDA_RESOURCE_PATH=/hello" \
-    -v ~/projects/lambda/import:/data/import \
-    -v ~/projects/lambda/export:/data/export \
-    --name builder digitalsanctum/lambda-builder
+        -e "LAMBDA_JAR=/data/import/lambda.jar" \
+        -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloWorld" \
+        -e "LAMBDA_RESOURCE_PATH=/hello" \
+        -v ~/projects/lambda/import:/data/import \
+        -v ~/projects/lambda/export:/data/export \
+        --name builder digitalsanctum/lambda-builder:primed
 
 
 Optionally, build and run a container to run the exported api.jar:
@@ -64,7 +64,7 @@ First, run interactively:
         -v ~/projects/lambda/export:/data/export \
         --name builder digitalsanctum/lambda-builder /bin/bash
 
-Second, from inside the builder container run /data/build.sh
+Second, from inside the builder container run /data/prime.sh
 
 Last, from the Docker host commit the container.
 
@@ -73,8 +73,9 @@ Last, from the Docker host commit the container.
 
 
 ## TODO
-- easy deploy to public clouds (Terraform?)
+- easy deploy to public clouds
     - start with AWS EC2 and Digital Ocean
+    - jclouds
 - generator
     - lambda documentation?
     - HTTP client
@@ -82,7 +83,8 @@ Last, from the Docker host commit the container.
     - with persistence to map functions to endpoints
     - manage lifecycle of lambdas
     - deploy to public clouds (parameterize Terraform?)
-    - Angular? Spring Boot/Jersey or Dropwizard?
+    - Spring Boot/Jersey
+    - paste Java code for the lambda and use a container to compile
 - metrics
 - scheduler
 - events
@@ -90,6 +92,8 @@ Last, from the Docker host commit the container.
     - Github webhook
 
 ## Half-baked ideas
+- configuration for function and how/where it's hosted
+- Reference code in github.com for a lambda
 - Use lambdas to generate other lambdas
 - chaining and/or side car lambdas
 - marketplace
