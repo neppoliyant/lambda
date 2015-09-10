@@ -32,17 +32,17 @@ Using a fresh builder image (no maven dependencies downloaded)
         -e "LAMBDA_RESOURCE_PATH=/hello" \
         -v ~/projects/lambda/import:/data/import \
         -v ~/projects/lambda/export:/data/export \
-        --name builder digitalsanctum/lambda-builder:primed /data/build.sh
+        --name builder digitalsanctum/lambda-builder
 
 Or, use the primed image (most maven dependencies already downloaded)
 
     docker run -d \
-    -e "LAMBDA_JAR=/data/import/lambda.jar" \
-    -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloWorld" \
-    -e "LAMBDA_RESOURCE_PATH=/hello" \
-    -v ~/projects/lambda/import:/data/import \
-    -v ~/projects/lambda/export:/data/export \
-    --name builder digitalsanctum/lambda-builder
+        -e "LAMBDA_JAR=/data/import/lambda.jar" \
+        -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloWorld" \
+        -e "LAMBDA_RESOURCE_PATH=/hello" \
+        -v ~/projects/lambda/import:/data/import \
+        -v ~/projects/lambda/export:/data/export \
+        --name builder digitalsanctum/lambda-builder:primed
 
 
 Optionally, build and run a container to run the exported api.jar:
@@ -64,7 +64,7 @@ First, run interactively:
         -v ~/projects/lambda/export:/data/export \
         --name builder digitalsanctum/lambda-builder /bin/bash
 
-Second, from inside the builder container run /data/build.sh
+Second, from inside the builder container run /data/prime.sh
 
 Last, from the Docker host commit the container.
 
@@ -73,7 +73,6 @@ Last, from the Docker host commit the container.
 
 
 ***REMOVED***
-***REMOVED*** (Terraform?)
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
@@ -82,13 +81,18 @@ Last, from the Docker host commit the container.
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
-    - Angular? Spring Boot/Jersey or Dropwizard?
+***REMOVED***
+***REMOVED***
+    - Spring Boot/Jersey
+***REMOVED***
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
 
+***REMOVED***
+***REMOVED***
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***

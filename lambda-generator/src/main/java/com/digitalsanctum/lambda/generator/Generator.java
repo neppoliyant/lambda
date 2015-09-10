@@ -51,15 +51,17 @@ public class Generator {
         Class responseType = types.get("response");
 
         String baseDir = "/data";
-        Path propsPath = Paths.get(baseDir, "/lambda-api-gateway/src/main/resources/application.properties");
-        Path endpointSrcPath = Paths.get(baseDir, "/lambda-api-gateway/src/main/java");
-        Path pomFilePath = Paths.get(baseDir, "/lambda-api-gateway/pom.xml");
+        Path coreJarPath = Paths.get(baseDir, "lambda-core-1.0-SNAPSHOT.jar");
+        Path propsPath = Paths.get(baseDir, "/template/src/main/resources/application.properties");
+        Path endpointSrcPath = Paths.get(baseDir, "/template/src/main/java");
+        Path pomFilePath = Paths.get(baseDir, "/template/pom.xml");
 
         new Generator()
+                .installLambdaCore(pomFilePath, coreJarPath)
+                .installLambdaJar(pomFilePath, lambdaJarPath)
                 .generateProperties(propsPath, name, handler, timeout)
                 .generateEndpointClass(endpointSrcPath, httpMethod, resourcePath, requestType, responseType)
-                .installLambdaJar(pomFilePath, lambdaJarPath)
-                .compileAndPackage(pomFilePath);
+                .compileAndPackageGateway(pomFilePath);
     }
 
     private static Class getHttpMethodFromString(String in) {
@@ -76,6 +78,8 @@ public class Generator {
         if (pomFile == null) {
             throw new IllegalArgumentException("No path specified for pom.xml");
         }
+
+        System.out.println("invokeMaven pom: " + pomFile + ", goals: " + Arrays.toString(goals));
 
         InvocationRequest invocationRequest = new DefaultInvocationRequest()
                 .setPomFile(pomFile.toFile())
@@ -97,12 +101,17 @@ public class Generator {
         return this;
     }
 
+    private Generator installLambdaCore(Path pomFile, Path coreJar) {
+        return invokeMaven(pomFile, "install:install-file -Dfile=" + coreJar.toString() +
+                " -DgroupId=com.digitalsanctum.lambda -DartifactId=lambda-core -Dversion=1.0-SNAPSHOT -Dpackaging=jar");
+    }
+
     private Generator installLambdaJar(Path pomFile, Path lambdaJar) {
         return invokeMaven(pomFile, "install:install-file -Dfile=" + lambdaJar.toString() +
                 " -DgroupId=com.foo -DartifactId=lambda -Dversion=1.0 -Dpackaging=jar");
     }
 
-    private Generator compileAndPackage(Path pomFile) {
+    private Generator compileAndPackageGateway(Path pomFile) {
         return invokeMaven(pomFile, "clean", "package");
     }
 

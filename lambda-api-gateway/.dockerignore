@@ -1,9 +1,0 @@
-lambda-api-gateway.iml
-pom.xml
-run.sh
-src
-target/lambda-api-gateway-1.0-SNAPSHOT.jar.original
-target/classes
-target/generated-sources
-target/maven-archiver
-target/maven-status
