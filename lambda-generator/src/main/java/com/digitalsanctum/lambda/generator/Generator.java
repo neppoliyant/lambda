@@ -59,9 +59,69 @@ public class Generator {
         new Generator()
                 .installLambdaCore(pomFilePath, coreJarPath)
                 .installLambdaJar(pomFilePath, lambdaJarPath)
-                .generateProperties(propsPath, name, handler, timeout)
-                .generateEndpointClass(endpointSrcPath, httpMethod, resourcePath, requestType, responseType)
+                .generateEntryPointClass(endpointSrcPath, httpMethod, resourcePath, requestType, responseType)
                 .compileAndPackageGateway(pomFilePath);
+//                .generateProperties(propsPath, name, handler, timeout)
+//                .generateEndpointClass(endpointSrcPath, httpMethod, resourcePath, requestType, responseType)
+//                .compileAndPackageGateway(pomFilePath);
+    }
+
+    private Generator generateEntryPointClass(Path endpointSrcPath,
+                                              Class httpMethod,
+                                              String resourcePath,
+                                              Class requestType,
+                                              Class responseType) throws IOException {
+
+        FieldSpec executorField = FieldSpec.builder(Executor.class, "executor")
+                .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                .build();
+
+        MethodSpec ctor = MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(ParameterSpec.builder(Executor.class, "executor").build())
+                .addStatement("this.executor = executor")
+                .build();
+
+        ParameterSpec paramSpec;
+        if (httpMethod.equals(POST.class)) {
+            paramSpec = ParameterSpec.builder(requestType, "input").build();
+
+        } else if (httpMethod.equals(GET.class)) {
+            paramSpec = ParameterSpec.builder(requestType, "input")
+                    .addAnnotation(AnnotationSpec.builder(QueryParam.class)
+                            .addMember("value", "$S", "input")
+                            .build())
+                    .build();
+        } else {
+            throw new IllegalArgumentException("unsupported http method " + httpMethod.getName());
+        }
+
+        MethodSpec messageMethod = MethodSpec.methodBuilder("message")
+                .addAnnotation(httpMethod)
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(paramSpec)
+                .addException(Exception.class)
+                .returns(responseType)
+                .addStatement("return ($T) executor.execute(input).getResult()", responseType)
+                .build();
+
+        TypeSpec endpoint = TypeSpec.classBuilder("EntryPoint")
+                .addAnnotation(AnnotationSpec.builder(javax.ws.rs.Path.class)
+                        .addMember("value", "$S", resourcePath)
+                        .build())
+                .addModifiers(Modifier.PUBLIC)
+                .addField(executorField)
+                .addMethod(ctor)
+                .addMethod(messageMethod)
+                .build();
+
+        JavaFile javaFile = JavaFile.builder("com.digitalsanctum.lambda.api.gateway", endpoint)
+                .build();
+
+        javaFile.writeTo(System.out);
+        javaFile.writeTo(endpointSrcPath);
+
+        return this;
     }
 
     private static Class getHttpMethodFromString(String in) {

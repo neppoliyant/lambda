@@ -13,6 +13,7 @@
         <module>lambda-generator</module>
         <module>lambda-samples</module>
         <module>lambda-console</module>
+        <module>lambda-api-gateway-min</module>
     </modules>
 
     <properties>
