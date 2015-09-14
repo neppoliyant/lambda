@@ -6,7 +6,7 @@ FROM digitalsanctum/maven-jdk8-debian
 ADD lambda-core/target/lambda-core-1.0-SNAPSHOT.jar /data/
 ADD lambda-generator/target/lambda-generator-1.0-SNAPSHOT.jar /data/
 ADD lambda-generator/generate.sh /data/
-ADD lambda-api-gateway-min /data/template
+ADD lambda-api-gateway-jersey /data/template
 #ADD lambda-api-gateway /data/template
 
 WORKDIR /data

@@ -83,7 +83,6 @@ Last, from the Docker host commit the container.
     - with persistence to map functions to endpoints
     - manage lifecycle of lambdas
     - deploy to public clouds (parameterize Terraform?)
-    - Spring Boot/Jersey
     - paste Java code for the lambda and use a container to compile
 - metrics
 - scheduler

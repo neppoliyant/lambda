@@ -19,15 +19,20 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 import javax.lang.model.element.Modifier;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 public class Generator {
 
@@ -50,27 +55,57 @@ public class Generator {
         Class requestType = types.get("request");
         Class responseType = types.get("response");
 
+        String gatewayType = "jersey";
+        String apiImpl = "lambda-api-gateway-" + gatewayType;
+
         String baseDir = "/data";
         Path coreJarPath = Paths.get(baseDir, "lambda-core-1.0-SNAPSHOT.jar");
         Path propsPath = Paths.get(baseDir, "/template/src/main/resources/application.properties");
         Path endpointSrcPath = Paths.get(baseDir, "/template/src/main/java");
         Path pomFilePath = Paths.get(baseDir, "/template/pom.xml");
 
-        new Generator()
-                .installLambdaCore(pomFilePath, coreJarPath)
-                .installLambdaJar(pomFilePath, lambdaJarPath)
-                .generateEntryPointClass(endpointSrcPath, httpMethod, resourcePath, requestType, responseType)
-                .compileAndPackageGateway(pomFilePath);
-//                .generateProperties(propsPath, name, handler, timeout)
-//                .generateEndpointClass(endpointSrcPath, httpMethod, resourcePath, requestType, responseType)
-//                .compileAndPackageGateway(pomFilePath);
+        if ("jersey".equals(gatewayType)) {
+            new Generator()
+                    .installLambdaCore(pomFilePath, coreJarPath)
+                    .installLambdaJar(pomFilePath, lambdaJarPath)
+                    .generateJerseyResource(endpointSrcPath, httpMethod, resourcePath, requestType)
+                    .compileAndPackageGateway(pomFilePath)
+                    .exportGatewayJar(
+                            Paths.get(baseDir, "/template/target/" + apiImpl + "-1.0-SNAPSHOT.jar"),
+                            Paths.get(baseDir, "/export/api.jar"));
+        } else if ("spring".equals(gatewayType)) {
+            new Generator()
+                    .installLambdaCore(pomFilePath, coreJarPath)
+                    .installLambdaJar(pomFilePath, lambdaJarPath)
+                    .generateProperties(propsPath, handler, timeout)
+                    .generateSpringResource(endpointSrcPath, httpMethod, resourcePath, requestType, responseType)
+                    .compileAndPackageGateway(pomFilePath)
+                    .exportGatewayJar(
+                            Paths.get(baseDir, "/template/target/" + apiImpl + "-1.0-SNAPSHOT.jar"),
+                            Paths.get(baseDir, "/export/api.jar"));
+        } else {
+            throw new IllegalArgumentException("Unsupported API Gateway type: " + gatewayType);
+        }
     }
 
-    private Generator generateEntryPointClass(Path endpointSrcPath,
-                                              Class httpMethod,
-                                              String resourcePath,
-                                              Class requestType,
-                                              Class responseType) throws IOException {
+    public void exportGatewayJar(Path src, Path target) {
+        System.out.println("exporting gateway jar");
+        try {
+            if (target.toFile().exists()) {
+                target.toFile().delete();
+            }
+            Files.copy(src, target);
+        } catch (IOException e) {
+            System.err.println("copy failed");
+            e.printStackTrace();
+        }
+        System.out.println("export complete");
+    }
+
+    public Generator generateJerseyResource(Path endpointSrcPath,
+                                            Class httpMethod,
+                                            String resourcePath,
+                                            Class requestType) throws IOException {
 
         FieldSpec executorField = FieldSpec.builder(Executor.class, "executor")
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
@@ -82,27 +117,18 @@ public class Generator {
                 .addStatement("this.executor = executor")
                 .build();
 
-        ParameterSpec paramSpec;
-        if (httpMethod.equals(POST.class)) {
-            paramSpec = ParameterSpec.builder(requestType, "input").build();
-
-        } else if (httpMethod.equals(GET.class)) {
-            paramSpec = ParameterSpec.builder(requestType, "input")
-                    .addAnnotation(AnnotationSpec.builder(QueryParam.class)
-                            .addMember("value", "$S", "input")
-                            .build())
-                    .build();
-        } else {
-            throw new IllegalArgumentException("unsupported http method " + httpMethod.getName());
-        }
+        ParameterSpec paramSpec = getParameterSpec(httpMethod, requestType);
 
         MethodSpec messageMethod = MethodSpec.methodBuilder("message")
                 .addAnnotation(httpMethod)
+                .addAnnotation(AnnotationSpec.builder(Consumes.class).addMember("value", "$S", MediaType.APPLICATION_JSON).build())
+                .addAnnotation(AnnotationSpec.builder(Produces.class).addMember("value", "$S", MediaType.APPLICATION_JSON).build())
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(paramSpec)
                 .addException(Exception.class)
-                .returns(responseType)
-                .addStatement("return ($T) executor.execute(input).getResult()", responseType)
+                .returns(Response.class)
+                .addStatement("Object obj = executor.execute(input).getResult()")
+                .addStatement("return $T.status(201).entity(obj).build()", Response.class)
                 .build();
 
         TypeSpec endpoint = TypeSpec.classBuilder("EntryPoint")
@@ -166,16 +192,16 @@ public class Generator {
                 " -DgroupId=com.digitalsanctum.lambda -DartifactId=lambda-core -Dversion=1.0-SNAPSHOT -Dpackaging=jar");
     }
 
-    private Generator installLambdaJar(Path pomFile, Path lambdaJar) {
+    public Generator installLambdaJar(Path pomFile, Path lambdaJar) {
         return invokeMaven(pomFile, "install:install-file -Dfile=" + lambdaJar.toString() +
                 " -DgroupId=com.foo -DartifactId=lambda -Dversion=1.0 -Dpackaging=jar");
     }
 
-    private Generator compileAndPackageGateway(Path pomFile) {
+    public Generator compileAndPackageGateway(Path pomFile) {
         return invokeMaven(pomFile, "clean", "package");
     }
 
-    private Generator generateProperties(Path propsFilePath, String name, String handler, int timeout) throws IOException {
+    private Generator generateProperties(Path propsFilePath, String handler, int timeout) throws IOException {
 
         Properties props = new Properties();
         props.setProperty("lambda.handler", handler);
@@ -192,29 +218,17 @@ public class Generator {
         return this;
     }
 
-    private Generator generateEndpointClass(Path endpointSrcPath,
-                                            Class httpMethod,
-                                            String resourcePath,
-                                            Class requestType,
-                                            Class responseType) throws IOException {
+    private Generator generateSpringResource(Path endpointSrcPath,
+                                             Class httpMethod,
+                                             String resourcePath,
+                                             Class requestType,
+                                             Class responseType) throws IOException {
         FieldSpec executorField = FieldSpec.builder(Executor.class, "executor")
                 .addModifiers(Modifier.PRIVATE)
                 .addAnnotation(Autowired.class)
                 .build();
 
-        ParameterSpec paramSpec;
-        if (httpMethod.equals(POST.class)) {
-            paramSpec = ParameterSpec.builder(requestType, "input").build();
-
-        } else if (httpMethod.equals(GET.class)) {
-            paramSpec = ParameterSpec.builder(requestType, "input")
-                    .addAnnotation(AnnotationSpec.builder(QueryParam.class)
-                            .addMember("value", "$S", "input")
-                            .build())
-                    .build();
-        } else {
-            throw new IllegalArgumentException("unsupported http method " + httpMethod.getName());
-        }
+        ParameterSpec paramSpec = getParameterSpec(httpMethod, requestType);
 
         MethodSpec messageMethod = MethodSpec.methodBuilder("message")
                 .addAnnotation(httpMethod)
@@ -242,5 +256,22 @@ public class Generator {
         javaFile.writeTo(endpointSrcPath);
 
         return this;
+    }
+
+    private ParameterSpec getParameterSpec(Class httpMethod, Class requestType) {
+        ParameterSpec paramSpec;
+        if (httpMethod.equals(POST.class)) {
+            paramSpec = ParameterSpec.builder(requestType, "input").build();
+
+        } else if (httpMethod.equals(GET.class)) {
+            paramSpec = ParameterSpec.builder(requestType, "input")
+                    .addAnnotation(AnnotationSpec.builder(QueryParam.class)
+                            .addMember("value", "$S", "input")
+                            .build())
+                    .build();
+        } else {
+            throw new IllegalArgumentException("unsupported http method " + httpMethod.getName());
+        }
+        return paramSpec;
     }
 }
