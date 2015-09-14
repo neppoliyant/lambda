@@ -3,7 +3,6 @@ package com.digitalsanctum.lambda;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -59,13 +58,8 @@ public class Executor implements ResultProvider {
             Map<String, Class> handlerTypes = getRequestHandlerTypes(this.definition.getHandler());
 
             Class requestClass = handlerTypes.get("request");
-            Object requestObj = input;
-            if (input instanceof String && ((String) input).startsWith("{")) {
-                ObjectMapper mapper = new ObjectMapper();
-                requestObj = mapper.readValue(((String) input).getBytes(), requestClass);
-            }
 
-            invoke(requestObj, obj, cls.getDeclaredMethod("handleRequest", requestClass, Context.class));
+            invoke(input, obj, cls.getDeclaredMethod("handleRequest", requestClass, Context.class));
         }
 
         return this;

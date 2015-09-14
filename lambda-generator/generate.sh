@@ -11,11 +11,4 @@ generateApiJar() {
     echo "generation complete!"
 }
 
-exportApiJar() {
-    echo "copying api.jar..."
-#    cp /data/template/target/lambda-api-gateway-1.0-SNAPSHOT.jar /data/export/api.jar
-    cp /data/template/target/lambda-api-gateway-min-1.0-SNAPSHOT.jar /data/export/api.jar
-    echo "done copying"
-}
-
-deleteExistingExport && generateApiJar && exportApiJar
+deleteExistingExport && generateApiJar

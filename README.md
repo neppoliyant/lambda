@@ -83,7 +83,6 @@ Last, from the Docker host commit the container.
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
-    - Spring Boot/Jersey
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
