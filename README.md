@@ -100,3 +100,10 @@ Last, from the Docker host commit the container.
 
 curl -X POST -d 'shane' 'http://localhost:8080/hello'
 
+
+docker run -d -e "LAMBDA_TIMEOUT=3" -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloPojo" --name api -p 8080:8080 digitalsanctum/lambda-api
+
+curl -H "Content-Type: application/json" -X POST -d '{"firstName":"Shane", "lastName":"Witbeck"}' 'http://localhost:8080/hello'
+curl -H "Content-Type: application/json" -X POST -d '{"firstName":"Shane", "lastName":"Witbeck"}' 'http://162.243.187.105:8080/hello'
+curl -H "Content-Type: application/json" -X POST -d '{"firstName":"Shane", "lastName":"Witbeck"}' 'http://lambda-api-4f03eb87.digitalsanctum.svc.tutum.io:8080/hello'
+

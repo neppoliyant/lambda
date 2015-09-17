@@ -49,8 +49,6 @@ public class Generator {
         Class httpMethod = getHttpMethodFromString(args[3]);
         int timeout = Integer.parseInt(args[4]);
 
-        String name = handler + System.currentTimeMillis();
-
         Map<String, Class> types = Executor.getRequestHandlerTypes(handler);
         Class requestType = types.get("request");
         Class responseType = types.get("response");

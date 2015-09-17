@@ -10,6 +10,8 @@ import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 
 public class LocalConsoleApp {
@@ -17,11 +19,13 @@ public class LocalConsoleApp {
     private final String lambdaJar;
     private final String lambdaHandler;
     private final String lambdaResourcePath;
+    private final Class httpMethodClazz;
 
-    public LocalConsoleApp(String lambdaJar, String lambdaHandler, String lambdaResourcePath) {
+    public LocalConsoleApp(String lambdaJar, String lambdaHandler, String lambdaResourcePath, String httpMethod) {
         this.lambdaJar = lambdaJar;
         this.lambdaHandler = lambdaHandler;
         this.lambdaResourcePath = lambdaResourcePath;
+        this.httpMethodClazz = Objects.equals(httpMethod, "POST") ? POST.class : GET.class;
     }
 
     public static void main(String[] args) throws Exception {
@@ -30,11 +34,13 @@ public class LocalConsoleApp {
         String lambdaJar = args[0];
         String lambdaHandler = args[1];
         String lambdaResourcePath = args[2];
+        String httpMethod = args[3];
 
-        // todo handle http method and timeout overrides
+        // dynamically adds lambda jar to classloader
         addLambdaJar(new File(lambdaJar));
 
-        new LocalConsoleApp(lambdaJar, lambdaHandler, lambdaResourcePath)
+        // introspects lambdaHandler and generates a Jersey resource/app
+        new LocalConsoleApp(lambdaJar, lambdaHandler, lambdaResourcePath, httpMethod)
                 .build();
 
         System.out.println("time = " + (System.currentTimeMillis() - start));
@@ -57,7 +63,7 @@ public class LocalConsoleApp {
 
         new Generator()
                 .installLambdaJar(pomFilePath, Paths.get(lambdaJar))
-                .generateJerseyResource(endpointSrcPath, POST.class, lambdaResourcePath, requestType)
+                .generateJerseyResource(endpointSrcPath, httpMethodClazz, lambdaResourcePath, requestType)
                 .compileAndPackageGateway(pomFilePath)
                 .exportGatewayJar(srcApiJar, exportedApiJar);
     }
