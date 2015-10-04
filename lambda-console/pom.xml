@@ -11,7 +11,7 @@
     <artifactId>lambda-console</artifactId>
 
     <properties>
-        <docker-client.version>3.1.4</docker-client.version>
+        <docker-client.version>3.1.5</docker-client.version>
         <slf4j.version>1.7.12</slf4j.version>
     </properties>
 
@@ -19,6 +19,11 @@
         <dependency>
             <groupId>com.digitalsanctum.lambda</groupId>
             <artifactId>lambda-generator</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.digitalsanctum.lambda</groupId>
+            <artifactId>lambda-provisioner</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>

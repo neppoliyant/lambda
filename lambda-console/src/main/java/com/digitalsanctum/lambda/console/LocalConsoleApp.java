@@ -2,6 +2,9 @@ package com.digitalsanctum.lambda.console;
 
 import com.digitalsanctum.lambda.Executor;
 import com.digitalsanctum.lambda.generator.Generator;
+import com.digitalsanctum.lambda.provisioner.Provisioner;
+import com.myjeeva.digitalocean.DigitalOcean;
+import com.myjeeva.digitalocean.impl.DigitalOceanClient;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -39,9 +42,27 @@ public class LocalConsoleApp {
         // dynamically adds lambda jar to classloader
         addLambdaJar(new File(lambdaJar));
 
-        // introspects lambdaHandler and generates a Jersey resource/app
+        // build API gateway
+        long buildStart = System.currentTimeMillis();
         new LocalConsoleApp(lambdaJar, lambdaHandler, lambdaResourcePath, httpMethod)
                 .build();
+        System.out.println("build gateway time=" + (System.currentTimeMillis()-buildStart));
+
+        // build and push API gateway docker image
+        long pushStart = System.currentTimeMillis();
+        new DockerImageBuilder(Paths.get("/Users/shane.witbeck/projects/lambda", "export"), "digitalsanctum/lambda-api:latest")
+                .build()
+                .push();
+        System.out.println("build/push docker image time=" + (System.currentTimeMillis()-pushStart));
+
+        // provision
+        long provStart = System.currentTimeMillis();
+        String authToken = System.getenv("DO_TOKEN");
+        DigitalOcean apiClient = new DigitalOceanClient("v2", authToken);
+        Provisioner provisioner = new Provisioner(apiClient);
+        Integer dropletId = provisioner.createDroplet("lambda-api", "docker", "tor1");
+        provisioner.waitForDropletCreation(dropletId);
+        System.out.println("provision time = " + (System.currentTimeMillis() - provStart));
 
         System.out.println("time = " + (System.currentTimeMillis() - start));
     }
