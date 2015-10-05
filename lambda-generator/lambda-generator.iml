@@ -16,6 +16,7 @@
     <orderEntry type="library" name="Maven: org.codehaus.plexus:plexus-component-annotations:1.6" level="project" />
     <orderEntry type="module" module-name="lambda-core" />
     <orderEntry type="library" name="Maven: com.amazonaws:aws-lambda-java-core:1.0.0" level="project" />
+    <orderEntry type="module" module-name="lambda-model" />
     <orderEntry type="library" name="Maven: javax.ws.rs:javax.ws.rs-api:2.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-beans:4.1.7.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework:spring-core:4.1.7.RELEASE" level="project" />

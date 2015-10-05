@@ -1,6 +1,7 @@
 package com.digitalsanctum.lambda.generator;
 
 import com.digitalsanctum.lambda.Executor;
+import com.digitalsanctum.lambda.model.LambdaConfig;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -24,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import javax.lang.model.element.Modifier;
 import javax.ws.rs.Consumes;
@@ -36,6 +38,12 @@ import javax.ws.rs.core.Response;
 
 public class Generator {
 
+    private final LambdaConfig lambdaConfig;
+
+    public Generator(LambdaConfig lambdaConfig) {
+        this.lambdaConfig = lambdaConfig;
+    }
+
     public static void main(String[] args) throws Exception {
 
         if (args == null || args.length < 3) {
@@ -43,7 +51,20 @@ public class Generator {
             return;
         }
 
-        Path lambdaJarPath = Paths.get(args[0]);
+        /*
+        String apiImplModule = "lambda-api-gateway-jersey";
+        String apiDir = lambdaSrcDir + "/" + apiImplModule;
+        Path endpointSrcPath = Paths.get(apiDir, "src", "main", "java");
+        Path pomFilePath = Paths.get(apiDir, "pom.xml");
+        Path srcApiJar = Paths.get(apiDir, "target", apiImplModule + "-1.0-SNAPSHOT.jar");
+        Path exportedApiJar = Paths.get(lambdaSrcDir, "export", "api.jar");
+
+        Map<String, Class> types = Executor.getRequestHandlerTypes(lambdaConfig.getHandler());
+        Class requestType = types.get("request");
+         */
+
+
+        /*Path lambdaJarPath = Paths.get(args[0]);
         String handler = args[1];
         String resourcePath = args[2];
         Class httpMethod = getHttpMethodFromString(args[3]);
@@ -83,13 +104,15 @@ public class Generator {
                             Paths.get(baseDir, "/export/api.jar"));
         } else {
             throw new IllegalArgumentException("Unsupported API Gateway type: " + gatewayType);
-        }
+        }*/
 
 
     }
 
-    public void exportGatewayJar(Path src, Path target) {
+    public void exportGatewayJar() {
         System.out.println("exporting gateway jar");
+        Path src = lambdaConfig.getApiGatewayModuleRoot().resolve(Paths.get("target", "lambda-api-gateway-jersey-1.0-SNAPSHOT.jar"));
+        Path target = lambdaConfig.getLambdaSrcDir().resolve(Paths.get("export", "api.jar"));
         try {
             if (target.toFile().exists()) {
                 target.toFile().delete();
@@ -102,10 +125,7 @@ public class Generator {
         System.out.println("export complete");
     }
 
-    public Generator generateJerseyResource(Path endpointSrcPath,
-                                            Class httpMethod,
-                                            String resourcePath,
-                                            Class requestType) throws IOException {
+    public Generator generateJerseyResource() throws IOException, IllegalAccessException, InstantiationException, ClassNotFoundException {
 
         FieldSpec executorField = FieldSpec.builder(Executor.class, "executor")
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
@@ -116,6 +136,10 @@ public class Generator {
                 .addParameter(ParameterSpec.builder(Executor.class, "executor").build())
                 .addStatement("this.executor = executor")
                 .build();
+
+        Class httpMethod = Objects.equals(lambdaConfig.getHttpMethod(), "POST") ? POST.class : GET.class;
+        Map<String, Class> types = Executor.getRequestHandlerTypes(lambdaConfig.getHandler());
+        Class requestType = types.get("request");
 
         ParameterSpec paramSpec = getParameterSpec(httpMethod, requestType);
 
@@ -133,7 +157,7 @@ public class Generator {
 
         TypeSpec endpoint = TypeSpec.classBuilder("EntryPoint")
                 .addAnnotation(AnnotationSpec.builder(javax.ws.rs.Path.class)
-                        .addMember("value", "$S", resourcePath)
+                        .addMember("value", "$S", lambdaConfig.getResourcePath())
                         .build())
                 .addModifiers(Modifier.PUBLIC)
                 .addField(executorField)
@@ -145,7 +169,7 @@ public class Generator {
                 .build();
 
         javaFile.writeTo(System.out);
-        javaFile.writeTo(endpointSrcPath);
+        javaFile.writeTo(lambdaConfig.getLambdaSrcDir().resolve(Paths.get("lambda-api-gateway-jersey", "src", "main", "java")));
 
         return this;
     }
@@ -192,13 +216,14 @@ public class Generator {
                 " -DgroupId=com.digitalsanctum.lambda -DartifactId=lambda-core -Dversion=1.0-SNAPSHOT -Dpackaging=jar");
     }
 
-    public Generator installLambdaJar(Path pomFile, Path lambdaJar) {
-        return invokeMaven(pomFile, "install:install-file -Dfile=" + lambdaJar.toString() +
-                " -DgroupId=com.foo -DartifactId=lambda -Dversion=1.0 -Dpackaging=jar");
+    public Generator installLambdaJar() {
+        Path rootPomPath = lambdaConfig.getLambdaSrcDir().resolve("pom.xml");
+        return invokeMaven(rootPomPath, "install:install-file -Dfile=" + lambdaConfig.getLambdaJarPath()
+                + " -DgroupId=com.foo -DartifactId=lambda -Dversion=1.0 -Dpackaging=jar");
     }
 
-    public Generator compileAndPackageGateway(Path pomFile) {
-        return invokeMaven(pomFile, "clean", "package");
+    public Generator compileAndPackageGateway() {
+        return invokeMaven(lambdaConfig.getLambdaSrcDir().resolve(Paths.get("lambda-api-gateway-jersey", "pom.xml")), "clean", "package");
     }
 
     private Generator generateProperties(Path propsFilePath, String handler, int timeout) throws IOException {
