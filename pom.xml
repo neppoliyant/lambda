@@ -16,6 +16,7 @@
         <module>lambda-api-gateway-jersey</module>
         <module>lambda-api-gateway-spring</module>
         <module>lambda-provisioner</module>
+        <module>lambda-model</module>
     </modules>
 
     <properties>
