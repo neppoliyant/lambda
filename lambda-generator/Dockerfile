@@ -11,7 +11,7 @@ ADD lambda-api-gateway-jersey /data/template
 
 WORKDIR /data
 
-***REMOVED*** defaults
+# lambda defaults
 ENV LAMBDA_HTTP_METHOD=POST LAMBDA_TIMEOUT=5
 
 RUN chmod a+x /data/generate.sh
