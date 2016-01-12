@@ -1,11 +1,8 @@
 package com.digitalsanctum.lambda.console;
 
 import com.digitalsanctum.lambda.generator.Generator;
-import com.digitalsanctum.lambda.model.DigitalOceanConfig;
 import com.digitalsanctum.lambda.model.DockerConfig;
-import com.digitalsanctum.lambda.model.DockerHostUserDataProvider;
 import com.digitalsanctum.lambda.model.LambdaConfig;
-import com.digitalsanctum.lambda.provisioner.Provisioner;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -25,22 +22,13 @@ public class LocalConsoleApp {
         String httpMethod = args[3];
 
         String imageName = "digitalsanctum/lambda-api";
-        int port = 80;
-        int timeout = 3;
         Path lambdaSrcDir = Paths.get(System.getenv("HOME"), "projects", "lambda");
         Path apiDockerfilePath = lambdaSrcDir.resolve("export");
         Path apiJarPath = apiDockerfilePath.resolve("api.jar");
 
         DockerConfig dockerConfig = new DockerConfig.Builder().fromEnv().build();
 
-        DigitalOceanConfig doConfig = new DigitalOceanConfig.Builder().fromEnv()
-                .userDataProvider(new DockerHostUserDataProvider(dockerConfig, imageName, lambdaHandler, port, timeout))
-                .hostname("test")
-                .size("512mb")
-                .region("tor1")
-                .build();
-
-        LambdaConfig lambdaConfig = new LambdaConfig.Builder(lambdaJar, lambdaHandler, imageName, dockerConfig, doConfig)
+        LambdaConfig lambdaConfig = new LambdaConfig.Builder(lambdaJar, lambdaHandler, imageName, dockerConfig)
                 .lambdaSrcDir(lambdaSrcDir)
                 .apiJarPath(apiJarPath.toString())
                 .resourcePath(lambdaResourcePath)
@@ -65,17 +53,26 @@ public class LocalConsoleApp {
         // build and push API gateway docker image
         long pushStart = System.currentTimeMillis();
         new DockerImageBuilder(apiDockerfilePath, imageName)
-                .build()
-                .push();
+                .build();
+//                .push();
         System.out.println("build/push docker image time=" + (System.currentTimeMillis() - pushStart));
 
 
         // provision
+        /*int port = 80;
+        int timeout = 3;
+        DigitalOceanConfig doConfig = new DigitalOceanConfig.Builder().fromEnv()
+                .userDataProvider(new DockerHostUserDataProvider(dockerConfig, imageName, lambdaHandler, port, timeout))
+                .hostname("test")
+                .size("512mb")
+                .region("tor1")
+                .build();
+
         long provStart = System.currentTimeMillis();
         Provisioner provisioner = new Provisioner(doConfig);
         Integer dropletId = provisioner.createDroplet();
         provisioner.waitForDropletCreation(dropletId);
-        System.out.println("provision time = " + (System.currentTimeMillis() - provStart));
+        System.out.println("provision time = " + (System.currentTimeMillis() - provStart));*/
 
         System.out.println("time = " + (System.currentTimeMillis() - start));
     }

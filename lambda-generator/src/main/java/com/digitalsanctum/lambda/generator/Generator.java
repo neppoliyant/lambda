@@ -2,21 +2,15 @@ package com.digitalsanctum.lambda.generator;
 
 import com.digitalsanctum.lambda.Executor;
 import com.digitalsanctum.lambda.model.LambdaConfig;
-import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.FieldSpec;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterSpec;
-import com.squareup.javapoet.TypeSpec;
-import org.apache.maven.shared.invoker.DefaultInvocationRequest;
-import org.apache.maven.shared.invoker.DefaultInvoker;
-import org.apache.maven.shared.invoker.InvocationRequest;
-import org.apache.maven.shared.invoker.InvocationResult;
-import org.apache.maven.shared.invoker.Invoker;
-import org.apache.maven.shared.invoker.MavenInvocationException;
+import com.squareup.javapoet.*;
+import org.apache.maven.shared.invoker.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.lang.model.element.Modifier;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -27,14 +21,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import javax.lang.model.element.Modifier;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 public class Generator {
 
@@ -137,7 +123,16 @@ public class Generator {
                 .addStatement("this.executor = executor")
                 .build();
 
-        Class httpMethod = Objects.equals(lambdaConfig.getHttpMethod(), "POST") ? POST.class : GET.class;
+        int responseStatusCode;
+        Class httpMethod;
+        if (Objects.equals(lambdaConfig.getHttpMethod(), "POST")) {
+            httpMethod = POST.class;
+            responseStatusCode = 201;
+        }
+        else {
+            httpMethod = GET.class;
+            responseStatusCode = 200;
+        }
         Map<String, Class> types = Executor.getRequestHandlerTypes(lambdaConfig.getHandler());
         Class requestType = types.get("request");
 
@@ -152,7 +147,7 @@ public class Generator {
                 .addException(Exception.class)
                 .returns(Response.class)
                 .addStatement("Object obj = executor.execute(input).getResult()")
-                .addStatement("return $T.status(201).entity(obj).build()", Response.class)
+                .addStatement("return $T.status($L).entity(obj).build()", Response.class, responseStatusCode)
                 .build();
 
         TypeSpec endpoint = TypeSpec.classBuilder("EntryPoint")
@@ -172,16 +167,6 @@ public class Generator {
         javaFile.writeTo(lambdaConfig.getLambdaSrcDir().resolve(Paths.get("lambda-api-gateway-jersey", "src", "main", "java")));
 
         return this;
-    }
-
-    private static Class getHttpMethodFromString(String in) {
-        if ("POST".equalsIgnoreCase(in)) {
-            return POST.class;
-        } else if ("GET".equalsIgnoreCase(in)) {
-            return GET.class;
-        } else {
-            throw new IllegalArgumentException("Unsupported HTTP method: " + in);
-        }
     }
 
     private Generator invokeMaven(Path pomFile, String... goals) {

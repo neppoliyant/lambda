@@ -15,11 +15,13 @@ public class ConsoleApplication {
 
     private static final String BUILDER_IMAGE = "digitalsanctum/lambda-builder";
 
+    final String USER_HOME = System.getenv("HOME");
+
     // volumes
     final HostConfig hostConfig = HostConfig.builder().binds(
-            "/Users/shane.witbeck/projects/lambda/import:/data/import",
-            "/Users/shane.witbeck/projects/lambda/export:/data/export",
-            "/Users/shane.witbeck/.m2/repository:/root/.m2/repository"
+            USER_HOME + "/projects/lambda/import:/data/import",
+            USER_HOME + "/projects/lambda/export:/data/export",
+            USER_HOME + "/.m2/repository:/root/.m2/repository"
     ).build();
 
     private final DockerClient docker;

@@ -1,7 +1,6 @@
 package com.digitalsanctum.lambda.model;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class LambdaConfig {
 
@@ -16,7 +15,6 @@ public class LambdaConfig {
     private String imageName;
 
     private DockerConfig dockerConfig;
-    private DigitalOceanConfig digitalOceanConfig;
 
     private Path lambdaSrcDir;
 
@@ -31,7 +29,6 @@ public class LambdaConfig {
         this.port = builder.port;
         this.imageName = builder.imageName;
         this.dockerConfig = builder.dockerConfig;
-        this.digitalOceanConfig = builder.digitalOceanConfig;
         this.lambdaSrcDir = builder.lambdaSrcDir;
     }
 
@@ -47,16 +44,14 @@ public class LambdaConfig {
         private String imageName;
 
         private DockerConfig dockerConfig;
-        private DigitalOceanConfig digitalOceanConfig;
 
         private Path lambdaSrcDir;
 
-        public Builder(String lambdaJarPath, String handler, String imageName, DockerConfig dockerConfig, DigitalOceanConfig digitalOceanConfig) {
+        public Builder(String lambdaJarPath, String handler, String imageName, DockerConfig dockerConfig) {
             this.lambdaJarPath = lambdaJarPath;
             this.handler = handler;
             this.imageName = imageName;
             this.dockerConfig = dockerConfig;
-            this.digitalOceanConfig = digitalOceanConfig;
         }
 
         public Builder lambdaSrcDir(Path lambdaSrcDir) {
@@ -137,10 +132,6 @@ public class LambdaConfig {
 
     public DockerConfig getDockerConfig() {
         return dockerConfig;
-    }
-
-    public DigitalOceanConfig getDigitalOceanConfig() {
-        return digitalOceanConfig;
     }
 
     public Path getLambdaSrcDir() {
