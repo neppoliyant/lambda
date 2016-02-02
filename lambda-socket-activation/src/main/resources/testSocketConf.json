@@ -1,0 +1,12 @@
+{
+  "name": "test",
+  "dockerImage": "nginx",
+  "socketListenStreamPort": 80,
+  "proxyServiceHost": "127.0.0.1",
+  "proxyServicePort": 8081,
+  "dockerEnginePath": "/usr/bin/docker",
+  "waitPortPath": "waitport",
+  "waitPortRetries": 600,
+  "netcatPath": "/bin/nc",
+  "waitPortSleepPeriod": 0.1
+}
