@@ -3,6 +3,8 @@
 
 A proof of concept self-hosted micro architecture heavily inspired by [AWS Lambda](https://aws.amazon.com/lambda/).
 
+**NOTE: This project continues to be a work in progress. Expect breaking changes.**
+
 ## Features
 - Compatible with AWS Lambda - the same artifacts will work
 - Meant to be self-hosted
@@ -15,19 +17,15 @@ A proof of concept self-hosted micro architecture heavily inspired by [AWS Lambd
 - LAMBDA_RESOURCE - the http path to map to the handler (for example "/hello")
 - LAMBDA_TIMEOUT - the maximum amount of time to wait for a call to finish
 
-
-
 ## TODO
 - easy deploy to public clouds
     - start with AWS EC2 and Digital Ocean
-    - jclouds
 - generator
     - lambda documentation?
     - HTTP client
 - console/meta
     - with persistence to map functions to endpoints
     - manage lifecycle of lambdas
-    - deploy to public clouds (parameterize Terraform?)
     - paste Java code for the lambda and use a container to compile
 - metrics
 - scheduler
@@ -37,16 +35,9 @@ A proof of concept self-hosted micro architecture heavily inspired by [AWS Lambd
 
 ## Half-baked ideas
 - configuration for function and how/where it's hosted
-- Reference code in github.com for a lambda
 - Use lambdas to generate other lambdas
 - chaining and/or side car lambdas
 - marketplace
-
-
-## Inspiration
-- http://tech.adroll.com/blog/data/2015/09/22/data-pipelines-docker.html
-- Nashorn javascript engine
-
 
 ## Examples
 
@@ -61,9 +52,6 @@ A proof of concept self-hosted micro architecture heavily inspired by [AWS Lambd
     docker run -d -e "LAMBDA_TIMEOUT=3" -e "LAMBDA_HANDLER=com.digitalsanctum.lambda.samples.HelloPojo" --name api -p 8080:8080 digitalsanctum/lambda-api
 
     curl -H "Content-Type: application/json" -X POST -d '{"firstName":"Shane", "lastName":"Witbeck"}' 'http://localhost:8080/hello'
-
-
-## Uber Config
 
 ### Generator
 
