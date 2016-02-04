@@ -94,7 +94,8 @@ public class ConsoleApplication {
     private void execInContainer(final String containerId, final String... command)
             throws DockerException, InterruptedException, IOException {
         final String execId = docker.execCreate(containerId, command,
-                DockerClient.ExecParameter.STDOUT, DockerClient.ExecParameter.STDERR);
+                DockerClient.ExecCreateParam.attachStdout(),
+                DockerClient.ExecCreateParam.attachStderr());
         final LogStream output = docker.execStart(execId);
 //        output.attach(System.out, System.err);
         final String execOutput = output.readFully();
