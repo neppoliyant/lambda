@@ -1,4 +1,5 @@
 .idea
 import
 export/api.jar
-maven/repository
+**/*.iml
+**/target
